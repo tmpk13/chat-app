@@ -40,4 +40,5 @@ Set port and localhost to what you want to use
 
 
 <br>
-*Claude 3.7 sonnet LLM tool was used to assist in development*
+<br>
+Claude 3.7 sonnet LLM tool was used to assist in development
