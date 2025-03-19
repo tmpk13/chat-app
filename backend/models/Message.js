@@ -1,9 +1,10 @@
+// backend/models/Message.js
 const mongoose = require('mongoose');
 
 const messageSchema = new mongoose.Schema({
-  chatRoom: {
+  conversation: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'ChatRoom',
+    ref: 'Conversation',
     required: true
   },
   sender: {
@@ -19,6 +20,23 @@ const messageSchema = new mongoose.Schema({
   timestamp: {
     type: Date,
     default: Date.now
+  },
+  read: {
+    type: Boolean,
+    default: false
+  }
+});
+
+// Update the conversation's lastMessage field when a new message is created
+messageSchema.post('save', async function(doc) {
+  try {
+    const Conversation = mongoose.model('Conversation');
+    await Conversation.findByIdAndUpdate(
+      doc.conversation,
+      { lastMessage: doc._id }
+    );
+  } catch (error) {
+    console.error('Error updating conversation lastMessage:', error);
   }
 });
 

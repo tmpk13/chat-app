@@ -51,7 +51,7 @@ class DirectMessageService {
    * @returns {Promise} Promise with array of users
    */
   async getUsers() {
-    const response = await axios.get(`${API_URL}/api/users`);
+    const response = await axios.get(`${API_URL}/api/conversations/users/list`);
     return response.data;
   }
 }
