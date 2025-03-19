@@ -24,7 +24,7 @@ const Home = () => {
 
   useEffect(() => {
     fetchChatRooms();
-  }, []);
+  }, [fetchChatRooms]); // Add fetchChatRooms to dependency array
 
   // Create a new chat room
   const handleCreateRoom = async (e) => {
