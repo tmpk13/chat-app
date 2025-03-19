@@ -20,7 +20,7 @@ const Home = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [setError]);
 
   useEffect(() => {
     fetchChatRooms();
