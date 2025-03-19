@@ -1,4 +1,4 @@
-// frontend/src/context/SocketContext.jsx
+// frontend/src/context/SocketContext.jsx (with debugging)
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import io from 'socket.io-client';
 import AuthContext from './AuthContext';
@@ -11,10 +11,15 @@ export const SocketProvider = ({ children }) => {
   const [connected, setConnected] = useState(false);
   const { isAuthenticated, user } = useContext(AuthContext);
 
+  console.log('Rendering SocketContext provider');
+  console.log('isAuthenticated:', isAuthenticated);
+  console.log('User:', user);
+
   useEffect(() => {
     let newSocket;
 
     if (isAuthenticated && user) {
+      console.log('Initializing socket connection');
       // Initialize socket connection
       newSocket = io(SOCKET_URL);
 
@@ -25,6 +30,7 @@ export const SocketProvider = ({ children }) => {
         
         // Join with user data
         newSocket.emit('join', { userId: user.id });
+        console.log('Emitted join event with userId:', user.id);
       });
 
       newSocket.on('disconnect', () => {
@@ -42,6 +48,7 @@ export const SocketProvider = ({ children }) => {
     // Cleanup on unmount
     return () => {
       if (newSocket) {
+        console.log('Cleaning up socket connection');
         newSocket.disconnect();
       }
     };
@@ -50,25 +57,34 @@ export const SocketProvider = ({ children }) => {
   // Join a conversation
   const joinConversation = (conversationId) => {
     if (socket && connected) {
+      console.log('Joining conversation:', conversationId);
       socket.emit('joinConversation', conversationId);
+    } else {
+      console.warn('Cannot join conversation - socket not connected');
     }
   };
 
   // Leave a conversation
   const leaveConversation = (conversationId) => {
     if (socket && connected) {
+      console.log('Leaving conversation:', conversationId);
       socket.emit('leaveConversation', conversationId);
+    } else {
+      console.warn('Cannot leave conversation - socket not connected');
     }
   };
 
   // Send a message in a conversation
   const sendMessage = (conversationId, message) => {
     if (socket && connected && user) {
+      console.log('Sending message in conversation:', conversationId);
       socket.emit('sendDirectMessage', {
         conversationId,
         message,
         sender: user.id
       });
+    } else {
+      console.warn('Cannot send message - socket not connected');
     }
   };
 

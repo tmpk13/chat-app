@@ -1,4 +1,4 @@
-// frontend/src/pages/Home.jsx
+// frontend/src/pages/Home.jsx (with debugging)
 import React, { useContext, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthContext from '../context/AuthContext';
@@ -12,12 +12,18 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [showUsersList, setShowUsersList] = useState(false);
 
+  console.log('Rendering Home component');
+  console.log('Current user:', user);
+
   // Fetch conversations (existing direct messages)
   const fetchConversations = async () => {
     try {
+      console.log('Fetching conversations');
       const data = await DirectMessageService.getConversations();
+      console.log('Received conversations:', data);
       setConversations(data);
     } catch (error) {
+      console.error('Error fetching conversations:', error);
       setError(error.response?.data?.message || 'Could not fetch conversations');
     } finally {
       setLoading(false);
@@ -27,11 +33,16 @@ const Home = () => {
   // Fetch users for starting new conversations
   const fetchUsers = async () => {
     try {
+      console.log('Fetching users');
       const data = await DirectMessageService.getUsers();
+      console.log('Received users:', data);
+      
       // Filter out the current user
       const filteredUsers = data.filter(u => u._id !== user?.id);
+      console.log('Filtered users (without current user):', filteredUsers);
       setUsers(filteredUsers);
     } catch (error) {
+      console.error('Error fetching users:', error);
       setError(error.response?.data?.message || 'Could not fetch users');
     }
   };
@@ -47,9 +58,12 @@ const Home = () => {
 
   const startConversation = async (userId) => {
     try {
+      console.log('Starting conversation with user ID:', userId);
       const conversation = await DirectMessageService.getOrCreateConversation(userId);
+      console.log('Created/retrieved conversation:', conversation);
       navigate(`/conversation/${conversation._id}`);
     } catch (error) {
+      console.error('Error starting conversation:', error);
       setError(error.response?.data?.message || 'Could not start conversation');
     }
   };
@@ -110,17 +124,21 @@ const Home = () => {
         ) : (
           <ul>
             {conversations.map((conversation) => {
+              console.log('Processing conversation:', conversation);
+              
               // Find the other user in the conversation
               const otherUser = conversation.participants.find(
                 participant => participant._id !== user?.id
               );
+              
+              console.log('Other user in this conversation:', otherUser);
               
               return (
                 <li key={conversation._id} className="conversation-item">
                   <Link to={`/conversation/${conversation._id}`} className="conversation-link">
                     <div className="conversation-info">
                       <span className="other-user-name">
-                        {otherUser.firstName} {otherUser.lastName}
+                        {otherUser ? `${otherUser.firstName} ${otherUser.lastName}` : 'Unknown User'}
                       </span>
                       {conversation.lastMessage && (
                         <span className="last-message">

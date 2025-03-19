@@ -16,6 +16,16 @@ class DirectMessageService {
   }
 
   /**
+   * Get a specific conversation by ID
+   * @param {string} conversationId ID of the conversation to fetch
+   * @returns {Promise} Promise with conversation data
+   */
+  async getConversation(conversationId) {
+    const response = await axios.get(`${API_URL}/api/conversations/${conversationId}`);
+    return response.data;
+  }
+
+  /**
    * Get or create a conversation with another user
    * @param {string} otherUserId ID of the user to start/continue conversation with
    * @returns {Promise} Promise with conversation data
