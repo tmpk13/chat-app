@@ -36,3 +36,8 @@ VITE_APP_SOCKET_URL=http://localhost:5000
 ```
 
 Set port and localhost to what you want to use 
+
+
+
+
+*Claude 3.7 sonnet LLM tool was used to assit in development*
