@@ -1,4 +1,3 @@
-// backend/server.js
 const express = require('express');
 const http = require('http');
 const socketIO = require('socket.io');
@@ -90,14 +89,10 @@ io.on('connection', (socket) => {
       });
       
       await newMessage.save();
+      await newMessage.populate('sender', 'firstName lastName');
       
       // Broadcast message to room
-      io.to(roomId).emit('newMessage', {
-        _id: newMessage._id,
-        sender: { _id: sender },
-        content: message,
-        timestamp: newMessage.timestamp
-      });
+      io.to(roomId).emit('newMessage', newMessage);
     } catch (error) {
       console.error('Error sending message:', error);
       socket.emit('error', { message: 'Failed to send message' });
@@ -109,21 +104,11 @@ io.on('connection', (socket) => {
     try {
       const { conversationId, message } = messageData;
       
-      // Get sender ID from connected users
-      let senderId = null;
-      for (const [userId, sid] of connectedUsers.entries()) {
-        if (sid === socket.id) {
-          senderId = userId;
-          break;
-        }
-      }
+      // No need to save the message here as it's already saved via the API
+      // Just broadcast it to the conversation room for real-time updates
       
-      if (!senderId) {
-        throw new Error('User not found');
-      }
-      
-      // Emit message to conversation room
       io.to(`conversation-${conversationId}`).emit('newMessage', message);
+      console.log(`Broadcasted message to conversation-${conversationId}:`, message);
     } catch (error) {
       console.error('Error sending direct message:', error);
       socket.emit('error', { message: 'Failed to send direct message' });

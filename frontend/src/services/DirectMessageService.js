@@ -1,4 +1,3 @@
-// frontend/src/services/DirectMessageService.js
 import axios from 'axios';
 import { API_URL } from '../config';
 
@@ -53,6 +52,16 @@ class DirectMessageService {
    */
   async sendMessage(conversationId, content) {
     const response = await axios.post(`${API_URL}/api/conversations/${conversationId}/messages`, { content });
+    return response.data;
+  }
+
+  /**
+   * Delete a conversation
+   * @param {string} conversationId ID of the conversation to delete
+   * @returns {Promise} Promise with delete result
+   */
+  async deleteConversation(conversationId) {
+    const response = await axios.delete(`${API_URL}/api/conversations/${conversationId}`);
     return response.data;
   }
 

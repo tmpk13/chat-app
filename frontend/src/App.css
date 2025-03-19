@@ -359,7 +359,6 @@ body {
   text-align: center;
 }
 
-/* Responsive styles */
 @media (max-width: 768px) {
   .create-room-form form {
     flex-direction: column;

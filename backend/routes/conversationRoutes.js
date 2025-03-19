@@ -1,4 +1,3 @@
-// backend/routes/conversationRoutes.js
 const express = require('express');
 const router = express.Router();
 const Conversation = require('../models/Conversation');
@@ -87,6 +86,33 @@ router.get('/:id', auth, async (req, res) => {
     res.json(conversation);
   } catch (error) {
     console.error('Get conversation error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Delete a conversation
+router.delete('/:id', auth, async (req, res) => {
+  try {
+    const conversation = await Conversation.findById(req.params.id);
+    
+    if (!conversation) {
+      return res.status(404).json({ message: 'Conversation not found' });
+    }
+    
+    // Check if user is a participant
+    if (!conversation.participants.some(p => p.toString() === req.user.userId)) {
+      return res.status(403).json({ message: 'Not authorized to delete this conversation' });
+    }
+    
+    // Delete all messages in the conversation
+    await Message.deleteMany({ conversation: req.params.id });
+    
+    // Delete the conversation
+    await Conversation.findByIdAndDelete(req.params.id);
+    
+    res.json({ message: 'Conversation deleted successfully' });
+  } catch (error) {
+    console.error('Delete conversation error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

@@ -1,6 +1,7 @@
 import React from 'react';
 
 const ChatMessage = ({ message, currentUserId }) => {
+  // Check if the current user is the sender
   const isOwnMessage = message.sender._id === currentUserId;
   
   return (
