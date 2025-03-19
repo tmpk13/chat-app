@@ -32,11 +32,11 @@ Install requirements
 
 .env file required
 
-<code>REACT_APP_API_URL=http://localhost:5000
-REACT_APP_SOCKET_URL=http://localhost:5000</code>
+<code>VITE_APP_API_URL=http://localhost:5000
+VITE_APP_SOCKET_URL=http://localhost:5000</code>
 
 Set port and localhost to what you want to use 
 
 Run with
 
-<code>npm start</code>
+<code>npm run dev</code>
