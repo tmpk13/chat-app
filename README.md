@@ -6,6 +6,10 @@ Install requirements
 
 <code>npm install axios react-router-dom socket.io-client</code>
 
+Testing
+
+<code>npm install --save-dev jest mongodb-memory-server supertest socket.io-client</code>
+
 .env file required
 
 <code>PORT=5000
