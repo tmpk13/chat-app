@@ -20,6 +20,10 @@ CLIENT_URL=http://localhost:3000</code>
 Fill in mongodb uri and jwt secret based on your information
 Set port and localhost to what you want to use 
 
+Run with
+
+<code>node server.js</code>
+
 ## Frontend
 
 Install requirements 
@@ -32,3 +36,7 @@ Install requirements
 REACT_APP_SOCKET_URL=http://localhost:5000</code>
 
 Set port and localhost to what you want to use 
+
+Run with
+
+<code>npm start</code>
