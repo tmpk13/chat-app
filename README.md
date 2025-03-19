@@ -2,9 +2,7 @@
 
 ## Backend
 
-Install requirements 
-
-From backend folder run with
+From backend directory run with
 
 <code>node server.js
 </code>
@@ -23,7 +21,7 @@ Set port and localhost to what you want to use
 
 ## Frontend
 
-Install requirements 
+From frontend directory run with
 
 ```
 npm install
@@ -38,7 +36,3 @@ VITE_APP_SOCKET_URL=http://localhost:5000
 ```
 
 Set port and localhost to what you want to use 
-
-Run with
-
-<code>npm run dev</code>
