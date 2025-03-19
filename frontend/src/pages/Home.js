@@ -11,7 +11,7 @@ const Home = () => {
   const [roomName, setRoomName] = useState('');
 
   // Fetch all chat rooms
-  const fetchChatRooms = async () => {
+  const fetchChatRooms = useCallback(async () => {
     try {
       const res = await axios.get(`${API_URL}/api/chatrooms`);
       setChatRooms(res.data);
@@ -20,7 +20,7 @@ const Home = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchChatRooms();
