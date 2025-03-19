@@ -1,6 +1,6 @@
 # chat-app
 
-## Backend
+### Backend
 
 From backend directory run with
 
@@ -19,7 +19,7 @@ CLIENT_URL=http://localhost:3000
 Fill in mongodb uri and jwt secret based on your information
 Set port and localhost to what you want to use 
 
-## Frontend
+### Frontend
 
 From frontend directory run with
 
@@ -39,5 +39,5 @@ Set port and localhost to what you want to use
 
 
 
-
-*Claude 3.7 sonnet LLM tool was used to assit in development*
+<br>
+*Claude 3.7 sonnet LLM tool was used to assist in development*
