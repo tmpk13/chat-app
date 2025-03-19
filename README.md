@@ -33,7 +33,7 @@ Run with
 
 Install requirements 
 
-<code>npm install express mongoose socket.io jsonwebtoken bcryptjs cors dotenv http
+<code>npm install
 </code>
 
 .env file required
