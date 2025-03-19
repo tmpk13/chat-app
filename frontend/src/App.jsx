@@ -1,3 +1,4 @@
+// frontend/src/App.jsx
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
@@ -7,7 +8,7 @@ import Navbar from './components/Navbar';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Home from './pages/Home';
-import ChatRoom from './pages/ChatRoom';
+import Conversation from './pages/Conversation';
 import Profile from './pages/Profile';
 import './App.css';
 
@@ -27,9 +28,9 @@ function App() {
                     <Home />
                   </PrivateRoute>
                 } />
-                <Route path="/chatroom/:id" element={
+                <Route path="/conversation/:id" element={
                   <PrivateRoute>
-                    <ChatRoom />
+                    <Conversation />
                   </PrivateRoute>
                 } />
                 <Route path="/profile" element={

@@ -1,101 +1,143 @@
+// frontend/src/pages/Home.jsx
 import React, { useContext, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import axios from 'axios';
+import { Link, useNavigate } from 'react-router-dom';
 import AuthContext from '../context/AuthContext';
-import { API_URL } from '../config';
+import DirectMessageService from '../services/DirectMessageService';
 
 const Home = () => {
   const { user, setError } = useContext(AuthContext);
-  const [chatRooms, setChatRooms] = useState([]);
+  const navigate = useNavigate();
+  const [conversations, setConversations] = useState([]);
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [roomName, setRoomName] = useState('');
+  const [showUsersList, setShowUsersList] = useState(false);
 
-  // Fetch all chat rooms
-  const fetchChatRooms = async () => {
+  // Fetch conversations (existing direct messages)
+  const fetchConversations = async () => {
     try {
-      const res = await axios.get(`${API_URL}/api/chatrooms`);
-      setChatRooms(res.data);
+      const data = await DirectMessageService.getConversations();
+      setConversations(data);
     } catch (error) {
-      setError(error.response?.data?.message || 'Could not fetch chat rooms');
+      setError(error.response?.data?.message || 'Could not fetch conversations');
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchChatRooms();
-  }, []);
-
-  // Create a new chat room
-  const handleCreateRoom = async (e) => {
-    e.preventDefault();
-    if (!roomName.trim()) return;
-
+  // Fetch users for starting new conversations
+  const fetchUsers = async () => {
     try {
-      await axios.post(`${API_URL}/api/chatrooms`, { name: roomName });
-      setRoomName('');
-      fetchChatRooms();
+      const data = await DirectMessageService.getUsers();
+      // Filter out the current user
+      const filteredUsers = data.filter(u => u._id !== user?.id);
+      setUsers(filteredUsers);
     } catch (error) {
-      setError(error.response?.data?.message || 'Could not create chat room');
+      setError(error.response?.data?.message || 'Could not fetch users');
     }
   };
 
-  // Delete a chat room
-  const handleDeleteRoom = async (roomId) => {
+  useEffect(() => {
+    fetchConversations();
+  }, []);
+
+  const handleNewConversation = () => {
+    fetchUsers();
+    setShowUsersList(true);
+  };
+
+  const startConversation = async (userId) => {
     try {
-      await axios.delete(`${API_URL}/api/chatrooms/${roomId}`);
-      fetchChatRooms();
+      const conversation = await DirectMessageService.getOrCreateConversation(userId);
+      navigate(`/conversation/${conversation._id}`);
     } catch (error) {
-      setError(error.response?.data?.message || 'Could not delete chat room');
+      setError(error.response?.data?.message || 'Could not start conversation');
     }
   };
 
   if (loading) {
-    return <div className="loading">Loading chat rooms...</div>;
+    return <div className="loading">Loading conversations...</div>;
   }
 
   return (
     <div className="home-container">
       <h1>Welcome, {user?.firstName}!</h1>
       
-      <div className="create-room-form">
-        <h2>Create New Chat Room</h2>
-        <form onSubmit={handleCreateRoom}>
-          <input
-            type="text"
-            placeholder="Room Name"
-            value={roomName}
-            onChange={(e) => setRoomName(e.target.value)}
-            required
-          />
-          <button type="submit" className="btn btn-primary">Create Room</button>
-        </form>
+      <div className="create-conversation">
+        <h2>Direct Messages</h2>
+        <button 
+          className="btn btn-primary" 
+          onClick={handleNewConversation}
+        >
+          Start New Conversation
+        </button>
       </div>
       
-      <div className="chat-rooms-list">
-        <h2>Available Chat Rooms</h2>
-        {chatRooms.length === 0 ? (
-          <p>No chat rooms available</p>
+      {showUsersList && (
+        <div className="users-list">
+          <h3>Select a user to message</h3>
+          {users.length === 0 ? (
+            <p>No other users available</p>
+          ) : (
+            <ul>
+              {users.map((u) => (
+                <li key={u._id} className="user-item">
+                  <div className="user-info">
+                    {u.firstName} {u.lastName} ({u.email})
+                  </div>
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => startConversation(u._id)}
+                  >
+                    Message
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <button 
+            className="btn btn-secondary" 
+            onClick={() => setShowUsersList(false)}
+          >
+            Cancel
+          </button>
+        </div>
+      )}
+      
+      <div className="conversations-list">
+        <h2>Your Conversations</h2>
+        {conversations.length === 0 ? (
+          <p>No conversations yet</p>
         ) : (
           <ul>
-            {chatRooms.map((room) => (
-              <li key={room._id} className="chat-room-item">
-                <Link to={`/chatroom/${room._id}`} className="room-name">
-                  {room.name}
-                </Link>
-                <div className="room-info">
-                  Created by: {room.creator.firstName} {room.creator.lastName}
-                </div>
-                {user && room.creator._id === user.id && (
-                  <button
-                    className="btn btn-danger"
-                    onClick={() => handleDeleteRoom(room._id)}
-                  >
-                    Delete
-                  </button>
-                )}
-              </li>
-            ))}
+            {conversations.map((conversation) => {
+              // Find the other user in the conversation
+              const otherUser = conversation.participants.find(
+                participant => participant._id !== user?.id
+              );
+              
+              return (
+                <li key={conversation._id} className="conversation-item">
+                  <Link to={`/conversation/${conversation._id}`} className="conversation-link">
+                    <div className="conversation-info">
+                      <span className="other-user-name">
+                        {otherUser.firstName} {otherUser.lastName}
+                      </span>
+                      {conversation.lastMessage && (
+                        <span className="last-message">
+                          {conversation.lastMessage.content.substring(0, 30)}
+                          {conversation.lastMessage.content.length > 30 ? '...' : ''}
+                        </span>
+                      )}
+                    </div>
+                    <div className="conversation-timestamp">
+                      {conversation.lastMessage 
+                        ? new Date(conversation.lastMessage.timestamp).toLocaleString()
+                        : 'No messages yet'}
+                    </div>
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>

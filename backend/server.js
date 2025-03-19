@@ -1,3 +1,4 @@
+// backend/server.js
 const express = require('express');
 const http = require('http');
 const socketIO = require('socket.io');
@@ -5,6 +6,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const userRoutes = require('./routes/userRoutes');
 const chatRoomRoutes = require('./routes/chatRoomRoutes');
+const conversationRoutes = require('./routes/conversationRoutes');
 require('dotenv').config();
 
 const app = express();
@@ -24,6 +26,7 @@ app.use(express.json());
 // Routes
 app.use('/api/users', userRoutes);
 app.use('/api/chatrooms', chatRoomRoutes);
+app.use('/api/conversations', conversationRoutes);
 
 // Database connection
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/chat-app')
@@ -54,7 +57,19 @@ io.on('connection', (socket) => {
     console.log(`Socket ${socket.id} left room ${roomId}`);
   });
 
-  // Handle new message
+  // Handle joining a conversation
+  socket.on('joinConversation', (conversationId) => {
+    socket.join(`conversation-${conversationId}`);
+    console.log(`Socket ${socket.id} joined conversation ${conversationId}`);
+  });
+
+  // Handle leaving a conversation
+  socket.on('leaveConversation', (conversationId) => {
+    socket.leave(`conversation-${conversationId}`);
+    console.log(`Socket ${socket.id} left conversation ${conversationId}`);
+  });
+
+  // Handle new message in chat room
   socket.on('sendMessage', async (messageData) => {
     try {
       const { roomId, message, sender } = messageData;
@@ -73,13 +88,39 @@ io.on('connection', (socket) => {
       // Broadcast message to room
       io.to(roomId).emit('newMessage', {
         _id: newMessage._id,
-        sender: sender,
+        sender: { _id: sender },
         content: message,
         timestamp: newMessage.timestamp
       });
     } catch (error) {
       console.error('Error sending message:', error);
       socket.emit('error', { message: 'Failed to send message' });
+    }
+  });
+
+  // Handle new direct message
+  socket.on('sendDirectMessage', async (messageData) => {
+    try {
+      const { conversationId, message } = messageData;
+      
+      // Get sender ID from connected users
+      let senderId = null;
+      for (const [userId, sid] of connectedUsers.entries()) {
+        if (sid === socket.id) {
+          senderId = userId;
+          break;
+        }
+      }
+      
+      if (!senderId) {
+        throw new Error('User not found');
+      }
+      
+      // Emit message to conversation room
+      io.to(`conversation-${conversationId}`).emit('newMessage', message);
+    } catch (error) {
+      console.error('Error sending direct message:', error);
+      socket.emit('error', { message: 'Failed to send direct message' });
     }
   });
 

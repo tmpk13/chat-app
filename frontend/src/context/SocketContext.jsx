@@ -1,3 +1,4 @@
+// frontend/src/context/SocketContext.jsx
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import io from 'socket.io-client';
 import AuthContext from './AuthContext';
@@ -46,25 +47,25 @@ export const SocketProvider = ({ children }) => {
     };
   }, [isAuthenticated, user]);
 
-  // Join a chat room
-  const joinRoom = (roomId) => {
+  // Join a conversation
+  const joinConversation = (conversationId) => {
     if (socket && connected) {
-      socket.emit('joinRoom', roomId);
+      socket.emit('joinConversation', conversationId);
     }
   };
 
-  // Leave a chat room
-  const leaveRoom = (roomId) => {
+  // Leave a conversation
+  const leaveConversation = (conversationId) => {
     if (socket && connected) {
-      socket.emit('leaveRoom', roomId);
+      socket.emit('leaveConversation', conversationId);
     }
   };
 
-  // Send a message
-  const sendMessage = (roomId, message) => {
+  // Send a message in a conversation
+  const sendMessage = (conversationId, message) => {
     if (socket && connected && user) {
-      socket.emit('sendMessage', {
-        roomId,
+      socket.emit('sendDirectMessage', {
+        conversationId,
         message,
         sender: user.id
       });
@@ -76,8 +77,8 @@ export const SocketProvider = ({ children }) => {
       value={{
         socket,
         connected,
-        joinRoom,
-        leaveRoom,
+        joinConversation,
+        leaveConversation,
         sendMessage
       }}
     >
