@@ -12,20 +12,24 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIO(server, {
   cors: {
-    origin: ["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:5173"], // Add all possible frontend URLs
+    origin: "*", // Allow all origins for development
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization", "x-auth-token"]
   }
 });
 
-// Middleware
+// CORS middleware with expanded configuration
 app.use(cors({
-  origin: ["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:5173"],
+  origin: "*", // Allow all origins for development
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "x-auth-token"]
 }));
+
+// Pre-flight requests handling for all routes
+app.options('*', cors());
+
 app.use(express.json());
 
 // Routes
@@ -142,5 +146,10 @@ const startServer = () => {
 
 // Connect to the database when imported
 connectDB();
+
+// For standalone execution
+if (require.main === module) {
+  startServer();
+}
 
 module.exports = { app, server, startServer, io, connectDB };
