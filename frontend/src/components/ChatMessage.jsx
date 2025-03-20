@@ -3,7 +3,7 @@ import AuthContext from '../context/AuthContext';
 
 const ChatMessage = ({ message, currentUserId }) => {
   
-  const user = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
   const isOwnMessage = message.sender._id === user._id;
   
   return (
