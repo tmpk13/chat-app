@@ -20,7 +20,7 @@ Fill in mongodb uri and jwt secret based on your information
 Set port and localhost to what you want to use 
 
 
-Testing
+Testing (Based on local host presets)
 ```
 npm install --save-dev jest supertest mongodb-memory-server socket.io-client
 npm test
