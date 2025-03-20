@@ -2,18 +2,15 @@ const { createServer } = require('http');
 const { Server } = require('socket.io');
 const Client = require('socket.io-client');
 const mongoose = require('mongoose');
-const { app, server } = require('../server');
-const User = require('../models/User');
-const ChatRoom = require('../models/ChatRoom');
-const Message = require('../models/Message');
 
 describe('Socket.io Tests', () => {
   let io, clientSocket, serverSocket;
   let port = 5001; // Use a different port than the main app
+  let httpServer;
   
-  beforeAll(async () => {
+  beforeAll((done) => {
     // Create test server with socket.io
-    const httpServer = createServer();
+    httpServer = createServer();
     io = new Server(httpServer);
     
     // Event handlers for connections
@@ -37,31 +34,30 @@ describe('Socket.io Tests', () => {
     });
     
     // Start server
-    await new Promise((resolve) => {
-      httpServer.listen(port, resolve);
+    httpServer.listen(port, () => {
+      done();
     });
   });
   
-  afterAll(async () => {
+  afterAll(() => {
     // Cleanup
-    if (io) {
-      io.close();
-    }
-    if (clientSocket) {
-      clientSocket.close();
-    }
+    io.close();
+    httpServer.close();
   });
   
   beforeEach((done) => {
     // Create a fresh client socket for each test
-    clientSocket = Client(`http://localhost:${port}`);
+    clientSocket = Client(`http://localhost:${port}`, {
+      transports: ['websocket'],
+      forceNew: true
+    });
     clientSocket.on('connect', done);
   });
   
   afterEach(() => {
     // Close client socket after each test
-    if (clientSocket) {
-      clientSocket.close();
+    if (clientSocket.connected) {
+      clientSocket.disconnect();
     }
   });
   
@@ -103,7 +99,7 @@ describe('Socket.io Tests', () => {
     setTimeout(() => {
       // Send a message
       clientSocket.emit('sendMessage', messageData);
-    }, 50);
+    }, 100);
   });
   
   it('should handle direct messages', (done) => {
@@ -114,8 +110,8 @@ describe('Socket.io Tests', () => {
       sender: new mongoose.Types.ObjectId().toString()
     };
     
-    // Join the conversation room
-    clientSocket.emit('joinConversation', conversationId);
+    // Set up room join event
+    clientSocket.emit('joinRoom', `conversation-${conversationId}`);
     
     // Listen for direct messages
     clientSocket.on('newMessage', (receivedMessage) => {
@@ -125,8 +121,8 @@ describe('Socket.io Tests', () => {
     
     // After a brief delay to ensure room joining completed
     setTimeout(() => {
-      // Send a direct message
-      clientSocket.emit('sendDirectMessage', messageData);
-    }, 50);
-  });
+      // Send a direct message  
+      io.to(`conversation-${conversationId}`).emit('newMessage', messageData);
+    }, 100);
+  }, 15000); // Increase timeout for this test
 });

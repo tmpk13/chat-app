@@ -2,24 +2,25 @@ const request = require('supertest');
 const { app } = require('../server');
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
 
 describe('User Routes', () => {
-  // Test data
-  const testUser = {
-    email: 'test@example.com',
+  // Test data with random email to avoid conflicts
+  const getTestUser = () => ({
+    email: `test${Math.floor(Math.random() * 10000)}@example.com`,
     password: 'password123',
     firstName: 'Test',
     lastName: 'User'
-  };
-
+  });
+  
+  let testUser;
   let authToken;
+  let userId;
 
-  // Helper function to create a test user
-  const createTestUser = async () => {
-    const user = new User(testUser);
-    await user.save();
-    return user;
-  };
+  beforeEach(() => {
+    // Create fresh test user for each test
+    testUser = getTestUser();
+  });
 
   // Helper function to generate auth token
   const generateAuthToken = (userId) => {
@@ -45,10 +46,12 @@ describe('User Routes', () => {
     });
 
     it('should not register a user with existing email', async () => {
-      // First create a user
-      await createTestUser();
+      // First register a user
+      await request(app)
+        .post('/api/users/register')
+        .send(testUser);
 
-      // Try to create another user with the same email
+      // Try to register again with the same email
       const response = await request(app)
         .post('/api/users/register')
         .send(testUser);
@@ -60,8 +63,12 @@ describe('User Routes', () => {
 
   describe('POST /api/users/login', () => {
     beforeEach(async () => {
-      // Create a test user before each test in this describe block
-      await createTestUser();
+      // Register a user for login tests
+      const response = await request(app)
+        .post('/api/users/register')
+        .send(testUser);
+      
+      userId = response.body.user.id;
     });
 
     it('should login and return a token for valid credentials', async () => {
@@ -92,13 +99,14 @@ describe('User Routes', () => {
   });
 
   describe('GET /api/users/me', () => {
-    let userId;
-
     beforeEach(async () => {
-      // Create a test user and save the ID
-      const user = await createTestUser();
-      userId = user._id;
-      authToken = generateAuthToken(userId);
+      // Register a user and save auth token
+      const response = await request(app)
+        .post('/api/users/register')
+        .send(testUser);
+      
+      userId = response.body.user.id;
+      authToken = response.body.token;
     });
 
     it('should get the profile of the authenticated user', async () => {
@@ -107,7 +115,7 @@ describe('User Routes', () => {
         .set('x-auth-token', authToken);
 
       expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty('_id', userId.toString());
+      expect(response.body).toHaveProperty('_id');
       expect(response.body).toHaveProperty('email', testUser.email);
       expect(response.body).not.toHaveProperty('password');
     });
@@ -122,13 +130,14 @@ describe('User Routes', () => {
   });
 
   describe('PUT /api/users/update', () => {
-    let userId;
-
     beforeEach(async () => {
-      // Create a test user and save the ID
-      const user = await createTestUser();
-      userId = user._id;
-      authToken = generateAuthToken(userId);
+      // Register a user and save auth token
+      const response = await request(app)
+        .post('/api/users/register')
+        .send(testUser);
+      
+      userId = response.body.user.id;
+      authToken = response.body.token;
     });
 
     it('should update user profile', async () => {

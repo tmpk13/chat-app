@@ -34,9 +34,13 @@ app.use('/api/chatrooms', chatRoomRoutes);
 app.use('/api/conversations', conversationRoutes);
 
 // Database connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/chat-app')
-  .then(() => console.log('Connected to MongoDB'))
-  .catch(err => console.error('Could not connect to MongoDB:', err));
+const connectDB = async () => {
+  if (mongoose.connection.readyState === 0) {
+    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/chat-app')
+      .then(() => console.log('Connected to MongoDB'))
+      .catch(err => console.error('Could not connect to MongoDB:', err));
+  }
+};
 
 // Socket.io connection handling
 const connectedUsers = new Map();
@@ -129,8 +133,14 @@ io.on('connection', (socket) => {
   });
 });
 
-// Start server
-const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// Don't start server automatically when imported
+// This allows tests to control when the server starts
+const startServer = () => {
+  const PORT = process.env.PORT || 5000;
+  return server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+};
 
-module.exports = { app, server };
+// Connect to the database when imported
+connectDB();
+
+module.exports = { app, server, startServer, io, connectDB };

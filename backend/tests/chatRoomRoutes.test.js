@@ -7,50 +7,25 @@ const Message = require('../models/Message');
 const jwt = require('jsonwebtoken');
 
 describe('Chat Room Routes', () => {
-  // Test users
-  const testUser1 = {
-    email: 'user1@example.com',
+  // Test users with random emails to avoid conflicts
+  const getTestUser1 = () => ({
+    email: `user1.${Math.floor(Math.random() * 10000)}@example.com`,
     password: 'password123',
     firstName: 'User',
     lastName: 'One'
-  };
+  });
 
-  const testUser2 = {
-    email: 'user2@example.com',
+  const getTestUser2 = () => ({
+    email: `user2.${Math.floor(Math.random() * 10000)}@example.com`,
     password: 'password123',
     firstName: 'User',
     lastName: 'Two'
-  };
+  });
 
+  let user1, user2;
   let user1Id, user2Id;
   let user1Token, user2Token;
   let chatRoomId;
-
-  // Helper function to create test users
-  const setupTestUsers = async () => {
-    // Create user 1
-    const user1 = new User(testUser1);
-    await user1.save();
-    user1Id = user1._id;
-    user1Token = generateAuthToken(user1Id);
-
-    // Create user 2
-    const user2 = new User(testUser2);
-    await user2.save();
-    user2Id = user2._id;
-    user2Token = generateAuthToken(user2Id);
-  };
-
-  // Helper function to create a test chat room
-  const createTestChatRoom = async () => {
-    const chatRoom = new ChatRoom({
-      name: 'Test Chat Room',
-      creator: user1Id,
-      participants: [user1Id]
-    });
-    await chatRoom.save();
-    return chatRoom;
-  };
 
   // Helper function to generate auth token
   const generateAuthToken = (userId) => {
@@ -62,7 +37,25 @@ describe('Chat Room Routes', () => {
   };
 
   beforeEach(async () => {
-    await setupTestUsers();
+    // Create fresh test users
+    user1 = getTestUser1();
+    user2 = getTestUser2();
+    
+    // Register user 1
+    const response1 = await request(app)
+      .post('/api/users/register')
+      .send(user1);
+    
+    user1Id = response1.body.user.id;
+    user1Token = response1.body.token;
+
+    // Register user 2
+    const response2 = await request(app)
+      .post('/api/users/register')
+      .send(user2);
+    
+    user2Id = response2.body.user.id;
+    user2Token = response2.body.token;
   });
 
   describe('POST /api/chatrooms', () => {
@@ -95,8 +88,12 @@ describe('Chat Room Routes', () => {
   describe('GET /api/chatrooms', () => {
     beforeEach(async () => {
       // Create a test chat room
-      const chatRoom = await createTestChatRoom();
-      chatRoomId = chatRoom._id;
+      const response = await request(app)
+        .post('/api/chatrooms')
+        .set('x-auth-token', user1Token)
+        .send({ name: 'Test Chat Room' });
+      
+      chatRoomId = response.body._id;
     });
 
     it('should get all chat rooms', async () => {
@@ -123,8 +120,12 @@ describe('Chat Room Routes', () => {
   describe('GET /api/chatrooms/:id', () => {
     beforeEach(async () => {
       // Create a test chat room
-      const chatRoom = await createTestChatRoom();
-      chatRoomId = chatRoom._id;
+      const response = await request(app)
+        .post('/api/chatrooms')
+        .set('x-auth-token', user1Token)
+        .send({ name: 'Test Chat Room' });
+      
+      chatRoomId = response.body._id;
     });
 
     it('should get a specific chat room by ID', async () => {
@@ -153,8 +154,12 @@ describe('Chat Room Routes', () => {
   describe('POST /api/chatrooms/:id/join', () => {
     beforeEach(async () => {
       // Create a test chat room
-      const chatRoom = await createTestChatRoom();
-      chatRoomId = chatRoom._id;
+      const response = await request(app)
+        .post('/api/chatrooms')
+        .set('x-auth-token', user1Token)
+        .send({ name: 'Test Chat Room' });
+      
+      chatRoomId = response.body._id;
     });
 
     it('should allow a user to join a chat room', async () => {
@@ -190,12 +195,17 @@ describe('Chat Room Routes', () => {
   describe('POST /api/chatrooms/:id/leave', () => {
     beforeEach(async () => {
       // Create a test chat room
-      const chatRoom = await createTestChatRoom();
-      chatRoomId = chatRoom._id;
+      const roomResponse = await request(app)
+        .post('/api/chatrooms')
+        .set('x-auth-token', user1Token)
+        .send({ name: 'Test Chat Room' });
+      
+      chatRoomId = roomResponse.body._id;
       
       // Add user2 to participants
-      chatRoom.participants.push(user2Id);
-      await chatRoom.save();
+      await request(app)
+        .post(`/api/chatrooms/${chatRoomId}/join`)
+        .set('x-auth-token', user2Token);
     });
 
     it('should allow a user to leave a chat room', async () => {
@@ -218,8 +228,12 @@ describe('Chat Room Routes', () => {
   describe('DELETE /api/chatrooms/:id', () => {
     beforeEach(async () => {
       // Create a test chat room
-      const chatRoom = await createTestChatRoom();
-      chatRoomId = chatRoom._id;
+      const response = await request(app)
+        .post('/api/chatrooms')
+        .set('x-auth-token', user1Token)
+        .send({ name: 'Test Chat Room' });
+      
+      chatRoomId = response.body._id;
     });
 
     it('should allow creator to delete a chat room', async () => {
