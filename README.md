@@ -19,13 +19,11 @@ CLIENT_URL=http://localhost:3000
 Fill in mongodb uri and jwt secret based on your information
 Set port and localhost to what you want to use 
 
-Test with
-```
-npm test
-```
-Testing packages
+
+Testing
 ```
 npm install --save-dev jest supertest mongodb-memory-server socket.io-client
+npm test
 ```
 ---
 ### Frontend
