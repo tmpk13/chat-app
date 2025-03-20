@@ -1,8 +1,11 @@
 import React from 'react';
+import React, { useContext } from 'react';
+import AuthContext from '../context/AuthContext';
 
 const ChatMessage = ({ message, currentUserId }) => {
-  // Check if the current user is the sender
-  const isOwnMessage = message.sender._id === currentUserId;
+  
+  const user = useContext(AuthContext);
+  const isOwnMessage = message.sender._id === user._id;
   
   return (
     <div className={`message ${isOwnMessage ? 'own-message' : 'other-message'}`}>
